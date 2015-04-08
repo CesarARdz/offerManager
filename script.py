@@ -1,13 +1,14 @@
 import os
 from dropbox.client import DropboxClient
 from dropbox.datastore import DatastoreManager, DatastoreConflictError
-from bottle import route, request, static_file, run
+from bottle import route, request, static_file, run, template, TEMPLATE_PATH
 from config import DROPBOX_TOKEN, IMAGES_PATH, MAX_RETRIES
 from Logger import _logger
+import datetime
 
 @route('/')
 def root():
-    return static_file('index.html', root='.')
+    return static_file('pages/index.html', root='.')
 
 
 @route('/upload', method='POST')
@@ -24,6 +25,55 @@ def do_upload():
         return "Need to select an image, try again."
     return "Upload Sucessful"
 
+@route('/galeria', method='GET')
+def genera_galeria():
+    return static_file('pages/galeria.tpl', root='.')
+
+@route('/images/<filename:path>', method='GET')
+def serve_files(filename):
+    return static_file(filename, root='images/')
+
+
+@route('/get_images', method='GET')
+def get_images_of_this_month():
+    client = DropboxClient(DROPBOX_TOKEN)
+    manager = DatastoreManager(client)
+    datastore = manager.open_default_datastore()
+
+    offer_table = datastore.get_table('offers')
+    offers = offer_table.query()
+
+    images_to_show = []
+    for offer in offers:  # dropbox.datastore.Record
+        name = offer.get('offerName')
+        begin = datetime.datetime.strptime(offer.get('begin'), "%Y-%m-%d").date()
+        end = datetime.datetime.strptime(offer.get('end'), "%Y-%m-%d").date()
+        begin_month = '{:02d}'.format(begin.month)
+        end_month = '{:02d}'.format(end.month)
+        current_month = '{:02d}'.format(datetime.datetime.now().month)
+        year = '{:4d}'.format(datetime.datetime.now().year)
+        if current_month == begin_month or current_month == end_month:
+            # belong to the current month, so we show it
+            images_to_show.append(name)
+
+    images_paths = download_and_save_images(images_to_show, year, current_month)
+
+    TEMPLATE_PATH.insert(0,'pages/')
+    return template('galeria', images=images_paths)
+
+def download_and_save_images(list_images, year, month):
+    client = DropboxClient(DROPBOX_TOKEN)
+    DESTINATION_FOLDER = 'images/' + year + month + '/'
+    if not os.path.exists(DESTINATION_FOLDER):
+        os.makedirs(DESTINATION_FOLDER)
+    final_images = []
+    for image in list_images:
+        f, metadata = client.get_file_and_metadata(image)
+        out = open(DESTINATION_FOLDER + image, 'wb')
+        final_images.append(DESTINATION_FOLDER + image)
+        out.write(f.read())
+        out.close()
+    return final_images
 
 def saveOnDropbox(full_path, filename, begin, end):
     client = DropboxClient(DROPBOX_TOKEN)

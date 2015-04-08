@@ -2,7 +2,7 @@ import logging
 
 def get_logger():
     logger = logging.getLogger(__name__)
-    handler = logging.FileHandler('offers2.log')
+    handler = logging.FileHandler('offers.log')
     handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)

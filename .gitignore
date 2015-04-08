@@ -3,4 +3,5 @@
 *.log
 config.py
 .idea
+*.DS_Store
 tmp
