@@ -1,0 +1,6 @@
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*.log
+config.py
+.idea
+tmp
