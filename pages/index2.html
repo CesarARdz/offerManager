@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+  <HEAD>
+    <LINK href="style.css" rel="stylesheet" type="text/css">
+  </HEAD>
+  <BODY>
+<form action="/activation" method="post" enctype="multipart/form-data">
+  <h3>Client Activation Form</h3>
+  <br />
+  <div>
+    Telephone number: <input type="input" name="phone" >
+  </div>
+  <br />
+  <div>
+    Serial number: <input type="input" name="serial" >
+  </div>
+  <br />
+  <div>
+    Date: <input type="date" name="instDate" step="1" min="2015-04-06" max="2015-12-31" value="2015-04-06">
+  </div>
+  <br />
+  <div class="onoffswitch">
+    Instalattion status: <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
+    <label class="onoffswitch-label" for="myonoffswitch">
+        <span class="onoffswitch-inner"></span>
+        <span class="onoffswitch-switch"></span>
+    </label>
+  </div>
+  <br />
+  <div>
+    <input type="submit" value="Save" />
+  </div>
+</form>
+</BODY>
+</HTML>

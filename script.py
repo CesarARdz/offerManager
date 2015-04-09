@@ -10,6 +10,15 @@ import datetime
 def root():
     return static_file('pages/index.html', root='.')
 
+@route('/delete')
+def root():
+    return static_file('pages/delete.html', root='.')
+
+@route('/deleteRecord', method='POST')
+def do_delete():
+    deleteR()
+    return "All Records delete"
+
 
 @route('/upload', method='POST')
 def do_upload():
@@ -24,6 +33,20 @@ def do_upload():
     else:
         return "Need to select an image, try again."
     return "Upload Sucessful"
+
+@route('/activationForm')
+def root():
+    return static_file('pages/index2.html', root='.')
+
+@route('/activation', method='POST')
+def do_uploadData():
+    phone = request.forms.get('phone')
+    serial = request.forms.get('serial')
+    date = request.forms.get('instDate')
+    instalation = request.forms.get('onoffswitch')
+
+    saveDataOnDropbox(phone, serial, date, instalation)
+    return "Upload Data Sucessful"
 
 @route('/galeria', method='GET')
 def genera_galeria():
@@ -96,6 +119,35 @@ def saveOnDropbox(full_path, filename, begin, end):
     image.close()
 
     _logger.debug("%s saved on dropbox" % filename)
+
+def saveDataOnDropbox(phone, serial, date, instalation):
+    client = DropboxClient(DROPBOX_TOKEN)
+    manager = DatastoreManager(client)
+    datastore = manager.open_default_datastore()
+
+    devices_table = datastore.get_table('uk_devices')
+    for _ in range(MAX_RETRIES):
+        try:
+            first_offer = devices_table.insert(phoneNumber=phone, serialNumber=serial, dateActivate=date, instStatus=instalation)
+            datastore.commit()
+            _logger.debug("data saved on offers table = (%s, %s, %s, %s)" % (phone, serial, date, instalation))
+            break
+        except DatastoreConflictError:
+            datastore.rollback()    # roll back local changes
+            datastore.load_deltas()  # load new changes from Dropbox
+
+def deleteR():
+    client = DropboxClient(DROPBOX_TOKEN)
+    manager = DatastoreManager(client)
+    datastore = manager.open_default_datastore()
+    tasks_table = datastore.get_table('uk_devices')
+    tasks = tasks_table.query(instStatus='on')
+    for task in tasks:
+        print task.get('serialNumber')
+        task.delete()
+    datastore.transaction(deleteR, max_tries=4)
+    datastore.commit()
+
 
 def saveOnDisk(filename, upload):
     if not os.path.exists(IMAGES_PATH):
